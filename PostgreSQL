@@ -2,7 +2,6 @@
 -- Начиная с этой даты, мы будем собирать его баланс уроков. 
 -- Создадим CTE first_payments с двумя полями: user_id и 
 -- first_payment_date (дата первой успешной транзакции). 
-
 -- ***first_payments***
 select user_id
     , min(date_trunc('day', transaction_datetime)) as first_payment_date
