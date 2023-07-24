@@ -1,0 +1,209 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+
+1. ***Импорт и анализ таблиц***    
+    1.1.   Импортируйте данные в окружение *Jupyter Notebook*.    
+    1.2.   Изучите все три таблицы и проверьте их на наличие пустых значений.    
+    1.3.   Исключите из таблиц все строки, в которых есть нулловые значения. Можно также подумать об альтернативных действиях - замене нуллов ну нули или 
+на другие значения. Обоснуйте свой выбор.    
+    1.4. Исследуйте количество торговых точек в каждом городе - постройте группировку по количеству в каждом городе и визуализируйте с помощью гистограммы.
+
+file = 'Новый диплом датасет.xlsx'
+xl = pd.ExcelFile(file)
+print(xl.sheet_names)
+
+data = xl.parse('Данные', parse_dates=[3]).dropna()
+data.info()
+data.head()
+
+clients = xl.parse('Clients').dropna()
+clients.info()
+clients.head()
+
+region = xl.parse('Region_dict')
+region.info()
+region.head()
+
+cities = region.groupby('city').agg(trading_point_amt=('id_trading_point', 'count')).reset_index()\
+.sort_values(by='trading_point_amt')
+
+plt.bar(cities['city'], cities['trading_point_amt'], color='grey')
+plt.xticks(rotation=90)
+plt.title('Количество торговых точек в городе')
+plt.grid(axis='y', linestyle=':')
+plt.show()
+
+2. ***Объединение таблиц***    
+    2.1.   У одного клиента может быть несколько платежей. Постройте агрегацию таблицы с платежами, где вычислите сумму платежей на каждого клиента.    
+    2.2.   Соедините (по клиенту) сгруппированную таблицу с платежами с клиентской таблицей. Убедитесь, что в таблице остались все клиенты из клиентской таблицы.     
+    2.3. Заполните нулями суммы покупок тех клиентов, которые их не совершали.    
+    2.4. С помощью словаря регионов подтяните к каждой торговой точке город, в котором она находится.    
+    2.5. Создайте поле флаг платежа, который принимает значения 0 или 1 в зависимости от того, заплатил клиент или нет.
+
+client_payments = data.groupby('id_client').agg(payment_sum=('amt_payment', 'sum')).reset_index()
+clients_set = clients.merge(client_payments, how='left').fillna(0).merge(region)
+clients_set['payment_flag'] = np.where(clients_set['payment_sum']>0, 1, 0)
+clients_set
+
+3. ***Автоматизация статистических вычислений***    
+    *Если вы уже создавали эти функции в рамках домашнего задания или курсовой работы, то можете использовать их.*    
+    3.1. Создайте функцию ***test_calc***, которая будет вычислять значение t-критерия (критерия Стьюдента) и *p_value* для сравнения средних и с помощью 
+функции *print* выводить сообщение о том, существует ли разница между средними (на основании *p_value*).    
+    *Аргументы функции:* *r1* (первая выборка), *r2* (вторая выборка), *alpha* (уровень значимости - имеет значение по умолчанию 5%).    
+    3.2. Создайте функцию ***mann_whitney_func***, которая будет рассчитывать значение критерия Манна Уитни и p_value для сравнения распределений и 
+с помощью функции *print* выводить сообщение о том, существует ли разница между средними (на основании *p_value*).    
+    *Аргументы функции:* *r1* (первая выборка), *r2* (вторая выборка), *alpha* (уровень значимости - имеет значение по умолчанию 5%).
+
+def test_calc(r1, r2, alpha=0.05):
+    print('Нулевая гипотеза о равенстве средних в рамках t-теста:', stats.ttest_ind(r1, r2)[1] > alpha)
+    
+def mann_whitney_func(r1, r2, alpha=0.05):
+    print('Нулевая гипотеза о равенстве средних в рамках теста Манна-Уитни:', stats.mannwhitneyu(r1, r2)[1] > alpha)
+
+4. ***Чистка неверно заполненных точек***    
+    4.1.  Создайте пустой список. Запустите цикл по всем торговым точкам и добавьте к этому списку все торговые точки, в которых не было заплачено 
+ни одного рубля ни одним клиентом.    
+    4.2. Создайте еще один пустой список. Запустите цикл по всем торговым точкам и добавьте к этому списку все торговые точки, в которых пустует 
+или контрольная, или тестовая группа.
+
+traiding_point = clients_set.groupby(['id_trading_point', 'nflag_test'])['payment_sum'].sum().reset_index()
+id_ = set(traiding_point[traiding_point['payment_sum']==0]['id_trading_point'])
+id_1 = set(np.setxor1d(clients_set[clients_set['nflag_test']==0]['id_trading_point'], \
+           clients_set[clients_set['nflag_test']==1]['id_trading_point']))
+id_cut = list(id_|id_1)
+
+5. ***Расчет общих результатов АБ Теста***    
+    5.1. Отбросьте все торговые точки, которые были вами обнаружены в **пункте 4**.    
+    5.2. Изобразите гистограмму платежей, на которой различными цветами изображены группы “тест” и “контроль”.     
+    5.3. Примените функцию ***test_calc*** и сделайте вывод (сравниваем средние платежи).    
+    5.4. Примените функцию ***test_calc*** и сделайте вывод (сравниваем конверсию в платеж, то есть *r1* и *r2* - это ряды нулей и единиц, 
+в зависимости от того, оплатил ли что-то клиент или нет).    
+    5.5. Примените функцию ***mann_whitney_func*** и сделайте вывод.
+
+clients_set_clean = clients_set.loc[~clients_set['id_trading_point'].isin(id_cut)]
+clients_set_clean
+
+sns.histplot(clients_set_clean[(clients_set_clean['nflag_test']==0)&(clients_set_clean['payment_flag']==1)]['payment_sum'], \
+            label='control')
+sns.histplot(clients_set_clean[(clients_set_clean['nflag_test']==1)&(clients_set_clean['payment_flag']==1)]['payment_sum'], \
+            label='test')
+
+plt.legend()
+plt.show()
+
+test_calc(clients_set_clean[clients_set_clean['nflag_test']==0]['payment_sum'],\
+          clients_set_clean[clients_set_clean['nflag_test']==1]['payment_sum'])
+
+test_calc(clients_set_clean[clients_set_clean['nflag_test']==0]['payment_flag'],\
+          clients_set_clean[clients_set_clean['nflag_test']==1]['payment_flag'])
+
+mann_whitney_func(clients_set_clean[clients_set_clean['nflag_test']==0]['payment_sum'],\
+                  clients_set_clean[clients_set_clean['nflag_test']==1]['payment_sum'])
+
+6. ***Сегментация результатов АБ Теста***    
+    6.1.  ***Москва***    
+    6.1.1. Повторите аналитику из пункта 5 в отношении Москвы. Сделайте выводы.    
+    6.2.  ***Санкт-Петербург***    
+    6.2.1. Повторите аналитику из пункта 5 в отношении Санкт-Петербурга. Сделайте выводы.    
+    6.3. ***Другие города***    
+    6.3.1. Запустите цикл по оставшимся городам. Проведите такой же анализ.
+
+***Москва***
+
+moscow = clients_set_clean[clients_set_clean['city']=='Москва']
+
+test_calc(moscow[moscow['nflag_test']==0]['payment_sum'],\
+          moscow[moscow['nflag_test']==1]['payment_sum'])
+
+test_calc(moscow[moscow['nflag_test']==0]['payment_flag'],\
+          moscow[moscow['nflag_test']==1]['payment_flag'])
+
+mann_whitney_func(moscow[moscow['nflag_test']==0]['payment_sum'],\
+                  moscow[moscow['nflag_test']==1]['payment_sum'])
+
+***Санкт-Петербург***
+
+saint_p = clients_set_clean[clients_set_clean['city']=='Санкт-Петербург']
+
+test_calc(saint_p[saint_p['nflag_test']==0]['payment_sum'],\
+          saint_p[saint_p['nflag_test']==1]['payment_sum'])
+
+test_calc(saint_p[saint_p['nflag_test']==0]['payment_flag'],\
+          saint_p[saint_p['nflag_test']==1]['payment_flag'])
+
+mann_whitney_func(saint_p[saint_p['nflag_test']==0]['payment_sum'],\
+                  saint_p[saint_p['nflag_test']==1]['payment_sum'])
+
+***Другие города***
+
+other_cities = clients_set_clean.loc[~clients_set_clean['city'].isin(['Москва', 'Санкт-Петербург'])]
+
+test_calc(other_cities[other_cities['nflag_test']==0]['payment_sum'],\
+          other_cities[other_cities['nflag_test']==1]['payment_sum'])
+
+test_calc(other_cities[other_cities['nflag_test']==0]['payment_flag'],\
+          other_cities[other_cities['nflag_test']==1]['payment_flag'])
+
+mann_whitney_func(other_cities[other_cities['nflag_test']==0]['payment_sum'],\
+                  other_cities[other_cities['nflag_test']==1]['payment_sum'])
+
+7. ***Отчет по АБ Тесту***    
+    Создайте пустой датафрейм. Запустите цикл по всем городам и торговым точкам.     
+    Заполните для каждой торговой точки все поля, указанные в требовании к таблице.     
+    Не забудьте задать один из трех лейблов, в зависимости от результата теста в данной торговой точке.    
+    Выгрузите полученные результаты в Excel. Разнесите результаты по трем разным листам в зависимости от лейбла.
+
+final = pd.DataFrame(columns=[])
+
+for cities in clients_set_clean['city'].unique():
+    in_between_ = clients_set_clean[clients_set_clean['city']==cities]
+    for ids in in_between_['id_trading_point'].unique():
+        in_between_next = in_between_[in_between_['id_trading_point']==ids]
+        slice_test = in_between_next[in_between_next['nflag_test']==1]
+        slice_control = in_between_next[in_between_next['nflag_test']==0]
+        
+        count_test = len(slice_test['nflag_test'])
+        count_control = len(slice_control['nflag_test'])
+        count_all = len(in_between_next)
+        avg_payment_test = round(slice_test['payment_sum'].mean(), 2)
+        avg_payment_control = round(slice_control['payment_sum'].mean(), 2)
+        diff = avg_payment_test-avg_payment_control
+        sigma_test = round(slice_test['payment_sum'].std(), 2)
+        sigma_control = round(slice_control['payment_sum'].std(), 2)
+        ttest = round(stats.ttest_ind(slice_control['payment_sum'], slice_test['payment_sum'])[0], 2)
+        pvalue_ttest = round(stats.ttest_ind(slice_control['payment_sum'], slice_test['payment_sum'])[1], 2)
+        
+        final = final.append({'city':cities,
+                              'id_trading_point':ids,
+                              'count_test':count_test,
+                              'count_control':count_control,
+                              'count_all':count_all,
+                              'percent_count':(),
+                              'avg_payment_test':avg_payment_test,
+                              'avg_payment_control':avg_payment_control,
+                              'diff':diff,
+                              'sigma_test':sigma_test,
+                              'sigma_control':sigma_control,
+                              'ttest':ttest,
+                              'pvalue_ttest':pvalue_ttest}, ignore_index=True)
+
+final['percent_count'] = round((final['count_all']/final['count_all'].sum()), 4)
+final['label'] = np.where((final['diff']>0)&(final['pvalue_ttest']<0.05), 'положительный исход', \
+                          np.where((final['diff']<0)&(final['pvalue_ttest']<0.05), 'отрицательный исход', \
+                          'нейтральный исход'))
+final
+
+positive = final[final['label']=='положительный исход']
+negative = final[final['label']=='отрицательный исход']
+neutral = final[final['label']=='нейтральный исход']
+
+writer = pd.ExcelWriter('Анализ АБ теста, диплом.xlsx')
+
+positive.to_excel(writer, sheet_name='Положительный')
+negative.to_excel(writer, sheet_name='Отрицательный')
+neutral.to_excel(writer, sheet_name='Нейтральный')
+
+writer.close()
