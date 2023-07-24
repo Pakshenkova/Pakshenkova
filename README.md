@@ -11,12 +11,12 @@ EXCEL / POWER QWERY / POWER PIVOT / POSTGRESQL / METABASE / PYTHON / PANDAS / NU
 
 <div id="badges">
   <a href="https://t.me/pakshenkova">
-    <img src="https://img.shields.io/badge/-blue?logo=telegram&logoColor=white&style=plastic"/>
+    <img src="https://img.shields.io/badge/Telegram-blue?logo=telegram&logoColor=white&style=plastic"/>
   </a>
   <a href="https://wa.me/79159479447">
-    <img src="https://img.shields.io/badge/-green?style=plastic&logo=whatsapp&logoColor=white" alt="WhatsApp Badge"/>
+    <img src="https://img.shields.io/badge/WhatsApp-green?style=plastic&logo=whatsapp&logoColor=white"/>
   </a>
   <a href="mailto:pakshenkova@gmail.com">
-    <img src="https://img.shields.io/badge/-orange?style=plastic&logo=gmail&logoColor=white" alt="Gmail Badge"/>
+    <img src="https://img.shields.io/badge/Gmail-orange?style=plastic&logo=gmail&logoColor=white"/>
   </a>
 </div>
