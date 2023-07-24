@@ -13,7 +13,10 @@ EXCEL / POWER QWERY / POWER PIVOT / POSTGRESQL / METABASE / PYTHON / PANDAS / NU
   <a href="https://t.me/pakshenkova">
     <img src="https://img.shields.io/badge/Telegram-blue?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Badge"/>
   </a>
-  <a href="pakshenkova@gmail.com">
+  <a href="https://wa.me/79159479447">
+    <img src="https://img.shields.io/badge/WhatsApp-green?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp Badge"/>
+  </a>
+  <a href="mailto:pakshenkova@gmail.com">
     <img src="https://img.shields.io/badge/Gmail-orange?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail Badge"/>
   </a>
 </div>
