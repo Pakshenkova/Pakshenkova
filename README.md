@@ -2,6 +2,8 @@
 
 > Меня зовут Анна, я начинающий аналитик данных. В этом репозитории вы найдёте некоторые мои учебные проекты, которые помогут понять, что я умею на данный момент.
 
+<br>
+
 **ТЕХНИЧЕСКИЕ СКИЛЫ**<br>
 EXCEL / POWER QWERY / POWER PIVOT / POSTGRESQL / METABASE / PYTHON / PANDAS / NUMPY / MATPLOTLIB / SEABORN / POWER BI
 
